@@ -144,8 +144,7 @@ CIIV <- function(Y, D, Z, X, alpha = 0.05, tuning = 0.1/log(length(Y)), intercep
   Jacobian_betaIV <- cbind(
     diag(c(1 / gamma_D)), diag(c(-gamma_Y / gamma_D^2))
   );
-  #Covmat_gamma <- if(robust) vcovHC(lm_Reduced, "HC0") else vcov(lm_Reduced);
-  Covmat_gamma <- if(robust)  vcovHAC(lm_Reduced) else vcov(lm_Reduced);
+  Covmat_gamma <- if(robust) vcovHC(lm_Reduced, "HC0") else vcov(lm_Reduced);
   sdIV <- sqrt(diag(Jacobian_betaIV %*% Covmat_gamma %*% t(Jacobian_betaIV)));
 
   # CI Downward Testing Sargen/Hansen-J Procedure and Post-Selection Estimation
@@ -319,15 +318,17 @@ CIIV.TestingSelectionEstimation <- function(
     res_CIM <- qr.resid(qr(regressor_CIM), y);
   } else {
     # At least one of the IVs is selected as valid.
+    
+    z_invalid <- matrix(z[, -selVec], ncol = Nr_invalid, nrow = n);
 
     if(intercept){
-      regressor_CIM_temp <- cbind(Covariates, 1, z[, -selVec]);
-      regressor_CIM <- cbind(fitted(lm(Covariates[,1] ~ Exogenous)), Covariates[,-1], 1, z[, -selVec]);
+      regressor_CIM_temp <- cbind(Covariates, 1, z_invalid);
+      regressor_CIM <- cbind(fitted(lm(Covariates[,1] ~ Exogenous)), Covariates[,-1], 1, z_invalid);
     }else{
-      regressor_CIM_temp <- cbind(Covariates, z[, -selVec]);
-      regressor_CIM <- cbind(fitted(lm(Covariates[,1] ~ Exogenous)), Covariates[,-1], z[, -selVec])
+      regressor_CIM_temp <- cbind(Covariates, z_invalid);
+      regressor_CIM <- cbind(fitted(lm(Covariates[,1] ~ Exogenous)), Covariates[,-1], z_invalid)
     }
-    length_regressor <- ncol(regressor_CIM_temp) - ncol(z[, -selVec]);
+    length_regressor <- ncol(regressor_CIM_temp) - ncol(z_invalid);
     iv_CIM <- AER::ivreg(y ~ regressor_CIM_temp - 1 | Exogenous);
     Coefficients_CIM <- coef(iv_CIM)[1:length_regressor];
     if(robust){
