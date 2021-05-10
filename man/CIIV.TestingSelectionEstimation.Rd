@@ -20,7 +20,10 @@ CIIV.TestingSelectionEstimation(
   alpha = 0.05,
   tuning = 0.1/log(length(Y)),
   intercept = TRUE,
-  robust = TRUE
+  robust = TRUE,
+  gamma_D,
+  Covmat_gamma,
+  firststage = FALSE
 )
 }
 \description{

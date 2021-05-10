@@ -12,7 +12,8 @@ CIIV(
   alpha = 0.05,
   tuning = 0.1/log(length(Y)),
   intercept = TRUE,
-  robust = TRUE
+  robust = TRUE,
+  firststage = FALSE
 )
 }
 \arguments{
@@ -37,16 +38,26 @@ Saran/Hansen-J test (default = 0.1/log(n)).}
 in the linear model (default = TRUE).}
 
 \item{robust}{Logical. If robust = TRUE, the linear model is robust to
-heteroskedasticity.}
+heteroskedasticity (default = TRUE).}
+
+\item{firststage}{Logical. If firststage = TRUE, a first-stage thresholding is 
+implemented to select the relevant instrument variables (default = FALSE).}
 }
 \value{
-Invalid instruments:
-   Identities of the invalid instrumental variables
+Valid instruments:
+   Identities of the valid instrumental variables
  selected by the algorithm.
 
-Number of Invalid Instruments:
-   The number of the selected invalid
- instrumental variables.
+Number of Valid Instruments:
+   The number of the selected valid instrumental variables.
+
+Relevant instruments:
+   Identities of the relevant instrumental variables
+ selected by the first stage thresholding if firststage = TRUE.
+
+Number of Relevant Instruments:
+   The number of the selected relevant instrumental variables 
+ if firststage = TRUE.
 
 Coefficients:
    The matrix for the post-selection IV estimation results
@@ -84,12 +95,12 @@ run the working example
 library(MASS)
 #Generate data
 n = 2000; L = 10; s = 3
-pi = c(rep(3,s),rep(0,L-s)); beta = 1; gamma = c(rep(1,L))
+pi = c(rep(3,s),rep(0,L-s)); beta = 1; gamma = c(0, rep(1,(L-2)), 0)
 epsilonSigma = matrix(c(1,0.8,0.8,1),2,2)
 epsilon = mvrnorm(n,rep(0,2),epsilonSigma)
 Z = matrix(rnorm(n*L),n,L)
 D = 0.5 + Z \%*\% gamma + epsilon[,1]
 Y = -0.5 + Z \%*\% pi + D * beta + epsilon[,2]
-result = CIIV(Y,D,Z,robust=FALSE)
+result = CIIV(Y,D,Z,robust=FALSE, firststage=TRUE)
 result
 }
