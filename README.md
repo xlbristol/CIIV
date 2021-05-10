@@ -14,11 +14,11 @@ source("https://raw.githubusercontent.com/xlbristol/CIIV/main/R/CIIV_Functions.R
   * **tuning:** A numeric scalar specifiying the threshold p-value for the Saran/Hansen-J test (default = 0.1/log(n)).
   * **intercept:** Logical. If intercept = TRUE, an intercept term is included in the linear model (default = TRUE).
   * **robust:** Logical. If robust = TRUE, the linear model is robust to heteroskedasticity.
-  * **firststage:** Logical. Logical. If firststage = TRUE, a first-stage thresholding is implemented to select the relevant instrument variables (default = FALSE).
+  * **firststage:** Logical. If firststage = TRUE, a first-stage thresholding is implemented to select the relevant instrument variables (default = FALSE).
 * **Output**
-  * **Valid instruments:** Identities of the valid instrumental variables selected by the algorithm.
+  * **Valid Instruments:** Identities of the valid instrumental variables selected by the algorithm.
   * **Number of Valid Instruments:** The number of the selected valid instrumental variables.
-  * **Relevant instruments:** Identities of the relevant instrumental variables selected by the first stage thresholding if firststage = TRUE.
+  * **Relevant Instruments:** Identities of the relevant instrumental variables selected by the first stage thresholding if firststage = TRUE.
   * **Number of Relevant Instruments:** The number of the selected relevant instrumental variables if firststage = TRUE.
   * **Coefficients:** The matrix for the post-selection IV estimation results for the coefficients of the exposure/treatment variable and exogenous
   explanatory variables using the selected valid instruments as IV and controlling for the selected invalid instruments. The first two columns are
