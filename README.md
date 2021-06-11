@@ -12,9 +12,9 @@ source("https://raw.githubusercontent.com/xlbristol/CIIV/main/R/CIIV_Functions.R
   * **X:** An optional numeric matrix of exogenous explanatory variables, with each column referring to one variable.
   * **alpha:** A numeric scalar between 0 and 1 specifying the significance level for the confidence interval for the causal effect estimate (default = 0.05).
   * **tuning:** A numeric scalar specifiying the threshold p-value for the Saran/Hansen-J test (default = 0.1/log(n)).
-  * **intercept:** Logical. If intercept = TRUE, an intercept term is included in the linear model (default = TRUE).
   * **robust:** Logical. If robust = TRUE, the linear model is robust to heteroskedasticity.
   * **firststage:** Logical. If firststage = TRUE, a first-stage thresholding is implemented to select the relevant instrument variables (default = FALSE).
+  * **firsttuning:** A numeric scalar specifiying the threshold critical value for the first stage t-test (default = sqrt(2.01*log(pz))).
 * **Output**
   * **Valid Instruments:** Identities of the valid instrumental variables selected by the algorithm.
   * **Number of Valid Instruments:** The number of the selected valid instrumental variables.
