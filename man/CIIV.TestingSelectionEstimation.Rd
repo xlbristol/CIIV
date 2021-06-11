@@ -19,11 +19,12 @@ CIIV.TestingSelectionEstimation(
   sdIV,
   alpha = 0.05,
   tuning = 0.1/log(length(Y)),
-  intercept = TRUE,
   robust = TRUE,
   gamma_D,
   Covmat_gamma,
-  firststage = FALSE
+  firststage = FALSE,
+  relevant_instruments,
+  Nr_relevant
 )
 }
 \description{

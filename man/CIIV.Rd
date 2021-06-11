@@ -11,9 +11,9 @@ CIIV(
   X,
   alpha = 0.05,
   tuning = 0.1/log(length(Y)),
-  intercept = TRUE,
   robust = TRUE,
-  firststage = FALSE
+  firststage = FALSE,
+  firsttuning = sqrt(2.01 * log(ncol(Z)))
 )
 }
 \arguments{
@@ -34,14 +34,14 @@ level for the confidence interval for the causal effect estimate (default =
 \item{tuning}{A numeric scalar specifiying the threshold p-value for the
 Saran/Hansen-J test (default = 0.1/log(n)).}
 
-\item{intercept}{Logical. If intercept = TRUE, an intercept term is included
-in the linear model (default = TRUE).}
-
 \item{robust}{Logical. If robust = TRUE, the linear model is robust to
 heteroskedasticity (default = TRUE).}
 
 \item{firststage}{Logical. If firststage = TRUE, a first-stage thresholding is 
 implemented to select the relevant instrument variables (default = FALSE).}
+
+\item{firsttuning}{A numeric scalar specifiying the threshold critical value for the
+first stage t-test (default = sqrt(2.01*log(pz))).}
 }
 \value{
 Valid instruments:
@@ -89,7 +89,7 @@ results using the selected valid instruments as IV and controlling for the
 selected invalid instruments as explanatory variables.
 }
 \examples{
-library(AER) library(sandwich)
+library(AER); library(sandwich)
 # the MASS package is only needed to
 run the working example
 library(MASS)
