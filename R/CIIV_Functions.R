@@ -118,7 +118,7 @@ CIIV <- function(Y, D, Z, X, alpha = 0.05, tuning = 0.1/log(length(Y)), robust =
 
   if (!missing(X)){
     X <- cbind(1, X);
-    if(is.null(colnames(X))){colnames(X) = c("intercept", paste0('X', 1:(ncol(X)-1)))}else{colnames(X) = c("intercept", colnames(X[,-1]))};
+    if(is.null(colnames(X))){colnames(X) = c("intercept", paste0('X', 1:ncol(X)))};
   }else{
     X <- matrix(1, n, 1);
     colnames(X) <- "intercept";
@@ -143,12 +143,11 @@ CIIV <- function(Y, D, Z, X, alpha = 0.05, tuning = 0.1/log(length(Y)), robust =
     sd_first <- sqrt(diag(if(robust) vcovHC(lm_first, "HC0") else vcov(lm_first)));
 
     first_index <- as.numeric(abs(coef_first/sd_first) >= firsttuning);
-    relevant_instruments <- which(first_index == 1);
+    relevant_index <- relevant_instruments <- which(first_index == 1);
     Nr_relevant <- length(relevant_instruments);
 
     if (sum(first_index) <= 1){
       warning("Less than two IVs are individually relevant, treat all IVs as strong");
-      relevant_instruments_one <- which(first_index == 1);
       relevant_instruments <- c(1:pz);
     }
 
@@ -162,7 +161,7 @@ CIIV <- function(Y, D, Z, X, alpha = 0.05, tuning = 0.1/log(length(Y)), robust =
     }
 
   }else{
-    relevant_instruments <- c(1:pz);
+    relevant_index <- relevant_instruments <- c(1:pz);
     Nr_relevant <- pz;
   };
 
@@ -201,7 +200,8 @@ CIIV <- function(Y, D, Z, X, alpha = 0.05, tuning = 0.1/log(length(Y)), robust =
     Covmat_gamma = Covmat_gamma,
     firststage = firststage,
     relevant_instruments = relevant_instruments,
-    Nr_relevant = Nr_relevant
+    Nr_relevant = Nr_relevant,
+    relevant_index = relevant_index
   );
 }
 
@@ -213,7 +213,7 @@ CIIV <- function(Y, D, Z, X, alpha = 0.05, tuning = 0.1/log(length(Y)), robust =
 #'These are not to be called by the user.
 CIIV.TestingSelectionEstimation <- function(
   Y, D, Z, U, Covariates, Exogenous, y, z, CovariatesNames, InstrumentNames, betaIV, sdIV, alpha = 0.05, tuning = 0.1/log(length(Y)), robust = TRUE,
-  gamma_D, Covmat_gamma, firststage = FALSE, relevant_instruments, Nr_relevant) {
+  gamma_D, Covmat_gamma, firststage = FALSE, relevant_instruments, Nr_relevant, relevant_index) {
 
   # Function for Sargan Test
   non_robust_sar_CI <- function(res_CI, Z, U, n) {
@@ -316,7 +316,6 @@ CIIV.TestingSelectionEstimation <- function(
 
         if(robust){
           sar_CI <- CIM.HansenJTest(Y, cbind(D, Z[,!colnames(Z) %in% paste0(selVec[, i])]), Z)[[1]];
-          #sar_CI <- CIM.HansenJTest(Y, cbind(D, Z[, -selVec[, i]]), Z)[[1]];
         } else{
           res_CI <- resid(AER::ivreg(Y ~ D + Z[,!colnames(Z) %in% paste0(selVec[, i])] - 1 | Z));
           sar_CI <- non_robust_sar_CI(res_CI, Z, U, n);
@@ -340,11 +339,11 @@ CIIV.TestingSelectionEstimation <- function(
   Nr_valid <- length(selVec);
 
   # Post-Selection Estimation
-  length_regressor <- ncol(Covariates);
   if (Nr_valid == 0) {
     print("None of the instruments is selected as valid, do OLS.")
 
-    regressor_CIM_temp <- regressor_CIM <- cbind(Covariates, z);
+    regressor_CIM_temp = regressor_CIM <- cbind(Covariates, z);
+    length_regressor <- ncol(regressor_CIM)-ncol(z);
     Coefficients_CIM <- qr.coef(qr(regressor_CIM), y)[1:length_regressor];
     res_CIM <- qr.resid(qr(regressor_CIM), y);
   } else {
@@ -353,7 +352,8 @@ CIIV.TestingSelectionEstimation <- function(
     z_invalid <- matrix(z[,!colnames(z) %in% paste0(selVec)], ncol = (ncol(z) - Nr_valid), nrow = n);
 
     regressor_CIM_temp <- cbind(Covariates, z_invalid);
-    regressor_CIM <- cbind(fitted(lm(Covariates[,1] ~ Exogenous)), Covariates[,-1], z_invalid);
+    regressor_CIM <- cbind(fitted(lm(Covariates[,1] ~ Exogenous)), Covariates[,-1], z_invalid)
+    length_regressor <- ncol(regressor_CIM_temp) - ncol(z_invalid);
     iv_CIM <- AER::ivreg(y ~ regressor_CIM_temp - 1 | Exogenous);
     Coefficients_CIM <- coef(iv_CIM)[1:length_regressor];
     if(robust){
@@ -399,7 +399,7 @@ CIIV.TestingSelectionEstimation <- function(
     object <- list(
       robust = robust,
       if(is.null(selVec)){
-        Valid_Instruments = paste0("None of the instruments are selected as valid.");
+        Valid_Instruments = paste0("None instruments selected as valid.");
       }else{
         Valid_Instruments = InstrumentNames[c(1:length(z))[selVec]];
       },
@@ -409,11 +409,7 @@ CIIV.TestingSelectionEstimation <- function(
         if(Nr_relevant == 0){
           Relevant_Instruments = paste0("None instruments selected as relevant.")
         }else{
-          if (Nr_relevant == 1){
-            Relevant_Instruments = InstrumentNames[c(1:length(z))[relevant_instruments_one]];
-          }else{
-            Relevant_Instruments = InstrumentNames[c(1:length(z))[relevant_instruments]];
-          }
+          Relevant_Instruments = InstrumentNames[c(1:length(z))[relevant_index]];
         };
       }else{
         Relevant_Instruments = paste0("No first stage selection.");
@@ -444,11 +440,7 @@ CIIV.TestingSelectionEstimation <- function(
         if(Nr_relevant == 0){
           Relevant_Instruments = paste0("None instruments selected as relevant.")
         }else{
-          if (Nr_relevant == 1){
-            Relevant_Instruments = InstrumentNames[c(1:length(z))[relevant_instruments_one]];
-          }else{
-            Relevant_Instruments = InstrumentNames[c(1:length(z))[relevant_instruments]];
-          }
+          Relevant_Instruments = InstrumentNames[c(1:length(z))[relevant_index]];
         };
       }else{
         Relevant_Instruments = paste0("No first stage selection.");
